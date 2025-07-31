@@ -2,9 +2,12 @@ package com.ssobackend.SSO.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.net.http.HttpHeaders;
+
+@RestController
 public class ContentController {
 
     @GetMapping("/home")
@@ -22,8 +25,5 @@ public class ContentController {
         return "home_user";
     }
 
-    @GetMapping("/login")
-    public String handleLogin() {
-        return "custom_login";
-    }
+
 }

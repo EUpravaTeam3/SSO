@@ -28,8 +28,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeRequests(registry ->{
                     registry.requestMatchers("/home", "/register/**").permitAll();
-                    registry.requestMatchers("//http://localhost:8005/api/users/**").hasRole("ADMIN");
-                    registry.requestMatchers("/http://localhost:8005/api/companies/**").hasRole("USER");
+                    registry.requestMatchers("/admin/home/**").hasRole("ADMIN");
+                    registry.requestMatchers("/user/home/**").hasRole("USER");
                     registry.anyRequest().authenticated();
                 })
                 .formLogin(httpSecurityFormLoginConfigurer -> {

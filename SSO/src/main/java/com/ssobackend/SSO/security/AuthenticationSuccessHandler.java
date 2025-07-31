@@ -15,10 +15,9 @@ public class AuthenticationSuccessHandler extends SavedRequestAwareAuthenticatio
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
         if (isAdmin) {
-            setDefaultTargetUrl("http://localhost:8005/api/users");
-//            setDefaultTargetUrl("http://localhost:8005/api"); for APR Service
+            setDefaultTargetUrl("http://localhost:4200"); //for APR Service
         } else {
-            setDefaultTargetUrl("http://localhost:8005/api/companies");
+            setDefaultTargetUrl("http://localhost:4200");
         }
         super.onAuthenticationSuccess(request, response, authentication);
     }
