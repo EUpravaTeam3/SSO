@@ -26,7 +26,7 @@ func main() {
 	router.Use(userHandler.CORSMiddleware())
 
 	router.POST("/user", userHandler.Login)
-	router.GET("/user/:app", userHandler.Authorize)
+	router.GET("/user/:app", userHandler.AuthorizeRole)
 	router.POST("/user/create", userHandler.RegisterUser)
 	router.POST("/user/roles/create", userHandler.RegisterAppRoles)
 	router.DELETE("/user/:ucn", userHandler.DeleteUser)

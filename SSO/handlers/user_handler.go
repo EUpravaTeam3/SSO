@@ -26,6 +26,9 @@ type Session struct {
 	Ucn       string             `bson:"ucn"`
 	AppRoles  map[string]string  `bson:"roles"`
 	ExpiresAt time.Time          `bson:"expires_at"`
+	Name      string             `bson:"name"`
+	Surname   string             `bson:"surname"`
+	Email     string             `bson:"email"`
 }
 
 type AppRole struct {
@@ -210,6 +213,9 @@ func (u *UserHandler) Login(c *gin.Context) {
 	sess := Session{
 		SessionID: sessionID,
 		Ucn:       creds.Ucn,
+		Name:      user.Name,
+		Surname:   user.Surname,
+		Email:     user.Email,
 		AppRoles:  m,
 		ExpiresAt: time.Now().Add(1 * time.Hour),
 	}
@@ -263,7 +269,7 @@ func (u *UserHandler) ReadAll(c *gin.Context) {
 	}
 }
 
-func (u *UserHandler) Authorize(c *gin.Context) {
+func (u *UserHandler) AuthorizeRole(c *gin.Context) {
 	sessionID, err := c.Cookie("SESSION_ID")
 	app := c.Param("app")
 	if err != nil {
@@ -284,7 +290,11 @@ func (u *UserHandler) Authorize(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"role": sess.AppRoles[app]})
+	c.JSON(http.StatusOK, gin.H{"role": sess.AppRoles[app],
+		"ucn":     sess.Ucn,
+		"name":    sess.Name,
+		"surname": sess.Surname,
+		"email":   sess.Email})
 }
 
 func (u *UserHandler) Logout(c *gin.Context) {
