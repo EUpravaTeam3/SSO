@@ -32,6 +32,8 @@ func main() {
 	router.DELETE("/user/:ucn", userHandler.DeleteUser)
 	router.POST("/user/logout", userHandler.Logout)
 	router.GET("/user/sessions", userHandler.ReadAll)
+	router.GET("/user/check/:ucn", userHandler.AuthorizeUser)
+	router.POST("user/:app/:ucn", userHandler.ChangeRole)
 
 	router.Run(":" + port)
 

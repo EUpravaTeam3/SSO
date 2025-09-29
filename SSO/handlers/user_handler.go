@@ -269,6 +269,67 @@ func (u *UserHandler) ReadAll(c *gin.Context) {
 	}
 }
 
+func (u *UserHandler) AuthorizeUser(c *gin.Context) {
+	sessionID, err := c.Cookie("SESSION_ID")
+	ucn := c.Param("ucn")
+
+	var sess Session
+	err = sessions.FindOne(context.Background(), bson.M{"session_id": sessionID}).Decode(&sess)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+		return
+	}
+
+	if ucn == sess.Ucn {
+		c.JSON(http.StatusOK, gin.H{"response": "authorized"})
+		return
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"response": "unauthorized"})
+		return
+	}
+}
+
+func (u *UserHandler) ChangeRole(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sessionID, err := c.Cookie("SESSION_ID")
+	app := c.Param("app")
+	ucn := c.Param("ucn")
+
+	var roleChange RoleChangeDTO
+
+	if err := c.ShouldBindJSON(&roleChange); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var sess Session
+	err = sessions.FindOne(context.Background(), bson.M{"session_id": sessionID}).Decode(&sess)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+		return
+	}
+
+	if sess.Ucn != roleChange.Initiator {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	appRoles.UpdateOne(ctx, bson.M{"ucn": ucn, "app": app}, bson.M{
+		"$set": bson.M{
+			"role": roleChange.Role,
+		}})
+	c.JSON(http.StatusOK, nil)
+	return
+
+}
+
+type RoleChangeDTO struct {
+	Role      string `bson:"role" json:"role"`
+	Initiator string `bson:"initiator" json:"initiator"`
+}
+
 func (u *UserHandler) AuthorizeRole(c *gin.Context) {
 	sessionID, err := c.Cookie("SESSION_ID")
 	app := c.Param("app")
