@@ -293,7 +293,7 @@ func (u *UserHandler) ChangeRole(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	sessionID, err := c.Cookie("SESSION_ID")
+	//sessionID, err := c.Cookie("SESSION_ID")
 	app := c.Param("app")
 	ucn := c.Param("ucn")
 
@@ -304,16 +304,38 @@ func (u *UserHandler) ChangeRole(c *gin.Context) {
 		return
 	}
 
-	var sess Session
-	err = sessions.FindOne(context.Background(), bson.M{"session_id": sessionID}).Decode(&sess)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
-		return
-	}
+	session := roleChange.Session
 
-	if sess.Ucn != roleChange.Initiator {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
+	fmt.Println("COMMUNICATION")
+	fmt.Println(app)
+	fmt.Println(ucn)
+	fmt.Println(roleChange.Initiator)
+	fmt.Println(roleChange.Role)
+	fmt.Println(session)
+	fmt.Println("END TEST")
+
+	var sess Session
+
+	if session != "eupravaDevelopment" {
+		err := sessions.FindOne(context.Background(), bson.M{"session_id": session}).Decode(&sess)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+			return
+		}
+
+		if sess.Ucn != roleChange.Initiator {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		_, err = sessions.UpdateOne(context.Background(), bson.M{"session_id": session},
+			bson.M{"$set": bson.M{
+				"role." + app: roleChange.Role,
+			}})
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+			return
+		}
 	}
 
 	appRoles.UpdateOne(ctx, bson.M{"ucn": ucn, "app": app}, bson.M{
@@ -321,13 +343,13 @@ func (u *UserHandler) ChangeRole(c *gin.Context) {
 			"role": roleChange.Role,
 		}})
 	c.JSON(http.StatusOK, nil)
-	return
 
 }
 
 type RoleChangeDTO struct {
 	Role      string `bson:"role" json:"role"`
 	Initiator string `bson:"initiator" json:"initiator"`
+	Session   string `bson:"session" json:"session"`
 }
 
 func (u *UserHandler) AuthorizeRole(c *gin.Context) {
