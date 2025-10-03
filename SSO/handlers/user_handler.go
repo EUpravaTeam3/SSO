@@ -328,20 +328,26 @@ func (u *UserHandler) ChangeRole(c *gin.Context) {
 			return
 		}
 
-		_, err = sessions.UpdateOne(context.Background(), bson.M{"session_id": session},
-			bson.M{"$set": bson.M{
-				"role." + app: roleChange.Role,
-			}})
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
-			return
-		}
 	}
 
-	appRoles.UpdateOne(ctx, bson.M{"ucn": ucn, "app": app}, bson.M{
-		"$set": bson.M{
-			"role": roleChange.Role,
+	_, err := sessions.UpdateOne(context.Background(), bson.M{"ucn": ucn},
+		bson.M{"$set": bson.M{
+			"roles." + app: roleChange.Role, // update the role in the current session (so the frontend can refresh faster, etc.)
 		}})
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
+		return
+	}
+
+	_, err = appRoles.UpdateOne(ctx, bson.M{"ucn": ucn, "app": app}, bson.M{
+		"$set": bson.M{
+			"role": roleChange.Role, // update the stored role of user for when they log in next time(s)
+		}})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
 	c.JSON(http.StatusOK, nil)
 
 }
